@@ -10,6 +10,7 @@ class Track():
     def __init__(self, audio_file, audio_delay):
         self.afile = audio_file
         self.delay = audio_delay
+        self.getWav()
 
     def getWav(self):
         cmd = [FFMPEG_BIN,
@@ -25,9 +26,10 @@ class Track():
         po = sp.Popen(cmd)
         po.stdin = None
         po.wait()
-        #print(self.afile + " returned: " + str(po.returncode))
+        print(self.afile + " returned: " + str(po.returncode))
+        self.state = po.returncode #if this is 1 do not add to the stream
         self.wav = self.afile + '.wav'
-        return self.wav
+        #return self.wav
 
 
 FFMPEG_BIN = "ffmpeg" # on Linux
@@ -49,7 +51,10 @@ for message in messages:
             fn = filename[0].text + ".flv"
             fn = fn[1:] #strip out slash
             dl = message.attrib['time']
-            recording.append( Track(fn, dl ) )
+            t = Track(fn, dl )
+            if int(t.state) == 0:
+                print("adding %s state = %s"%(t.afile, t.state))
+                recording.append( t )
 
 for t in recording:
     t.getWav()
